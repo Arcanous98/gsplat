@@ -5,7 +5,7 @@
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="Train on an NCore v4 Capture" href="ncore.html"><link rel="prev" title="Fit a Single Image" href="image.html">
 
-    <!-- Generated with Sphinx 7.4.7 and Furo 2025.12.19 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2025.12.19 -->
         <title>Render a Large Scene - gsplat documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d111a655" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=7bdb33bb" />
@@ -245,6 +245,7 @@
   <p class="caption" role="heading"><span class="caption-text">Examples</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="colmap.html">Fit a COLMAP Capture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dynamic_surgical.html">Dynamic Surgical Scene Reconstruction (G-SHARP port, experimental)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="image.html">Fit a Single Image</a></li>
 <li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Render a Large Scene</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ncore.html">Train on an NCore v4 Capture</a></li>
@@ -256,6 +257,7 @@
 <p class="caption" role="heading"><span class="caption-text">Python API</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../apis/compression.html">Compression</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../apis/contrib.html">gsplat.contrib (experimental)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../apis/rasterization.html">Rasterization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../apis/strategy.html">Densification</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../apis/utils.html">Utils</a></li>
@@ -270,6 +272,10 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../migration/migration_inria.html">Migrate from diff-gaussian-rasterization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../migration/migration_legacy.html">Migrate from gsplat v0.1.11</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Proposals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../proposals/gsharp_v0_2_port.html">G-SHARP v0.2 Integration Proposal</a></li>
 </ul>
 
 </div>
@@ -315,7 +321,7 @@ For example here we mimic a large scene by replicating the Garden scene into a 9
 which results 30M Gaussians in total while <cite>gsplat</cite> still allows real-time rendering for it.</p>
 <p>The main magic that allows this is a very simple trick: we disregard the Gaussians that are
 far away from the camera, by applying a small threshold (e.g., 3 pixel) to the projected
-Gaussian radius which is configurable in our <code class="xref py py-func docutils literal notranslate"><span class="pre">rasterization()</span></code> API as <code class="code docutils literal notranslate"><span class="pre">radius_clip</span></code>.</p>
+Gaussian radius which is configurable in our <a class="reference internal" href="../apis/rasterization.html#gsplat.rasterization" title="gsplat.rasterization"><code class="xref py py-func docutils literal notranslate"><span class="pre">rasterization()</span></code></a> API as <code class="code docutils literal notranslate"><span class="pre">radius_clip</span></code>.</p>
 <p>With <cite>gsplat</cite> as CUDA Backend:</p>
 <div style="position:relative; padding-bottom:56.25%; height:0; width:100%">
     <iframe style="position:absolute; top:0; left:0; width:100%; height:100%" src="https://www.youtube.com/embed/rXyJwL7uJFQ?si=kQ10HcASlvhztTUA" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
@@ -391,7 +397,7 @@ python<span class="w"> </span>simple_viewer.py<span class="w"> </span>--scene_gr
     </aside>
   </div>
 </div><script src="../_static/documentation_options.js?v=5929fcd5"></script>
-    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/furo.js?v=46bd48cc"></script>
     </body>
