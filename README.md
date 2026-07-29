@@ -1,19 +1,15 @@
 # gsplat-nht
 
 A fork of [nerfstudio-project/gsplat](https://github.com/nerfstudio-project/gsplat) that adds
-**NHT (Neural Harmonic Textures)** — a deferred neural shading path where each Gaussian carries
-tetrahedral vertex features that are harmonically encoded during rasterization and decoded to
-colour by a small MLP, instead of storing spherical-harmonic colour per Gaussian.
+**NHT (Neural Harmonic Textures)**. A neural texturing approach where Gaussians carry tetrahedral vertex features, which are interpolated and harmonically encoded during rasterization, and then finally decoded to
+colour by a small MLP in a single deferred pass. An alternative to storing spherical harmonics colour per Gaussian.
 
 Everything upstream gsplat does still works unchanged; NHT is opt-in through
 `rasterization(..., nht_params=NHTParams())`.
 
 ### What this fork adds
 
-- **NHT deferred shading**, in two interchangeable execution paths (below).
-- **Windows / MSVC support.** Upstream `main` does not currently compile with MSVC; this fork
-  carries the fixes (`std::countl_zero` for `__builtin_clzll`, MSVC-safe `constexpr` capture in
-  the launch lambdas, explicit CUB instantiations, and `::isfinite` in device code).
+- **NHT deferred shading**, in two options, a fused kernel and a separate tcnn module (more on this below).
 - **NHT trainer, viewer and benchmark scripts** — `examples/simple_trainer_nht.py`,
   `examples/simple_viewer_nht.py`, and `examples/benchmarks/nht/`.
 - **Scene / experimental integration** — `GaussianNHTScene` and an NHT render path in
@@ -21,10 +17,10 @@ Everything upstream gsplat does still works unchanged; NHT is opt-in through
 
 ### Non-fused vs fused kernels
 
-Both paths are numerically equivalent up to fp16 estimator noise; they differ in how the
+Both paths are equivalent numerically, but they differ in how the
 rasteriser and the decoder MLP are scheduled.
 
-| | **Non-fused** (default, most general) | **Fused** (fastest) |
+| | **Non-fused** | **Fused** |
 |---|---|---|
 | Execution | Rasterise harmonic features, then run the MLP as a separate tiny-cuda-nn pass | Rasterisation + SH view encoding + MLP + sigmoid in a single CUDA kernel (WMMA tensor cores) |
 | Use for | Training and inference, any configuration | Training and inference on the supported configs below |
@@ -34,7 +30,7 @@ rasteriser and the decoder MLP are scheduled.
 | `feature_dim` | Unconstrained | {4, 8, 12, 16, 24, 32, 48, 64, 96} forward; {16, 32, 48} for the fused backward |
 
 The fused path avoids materialising the per-pixel feature buffer and the MLP activations, so it is
-both faster and markedly more memory-efficient at high resolution — the unfused training step keeps
+both faster and substantially more memory-efficient at high resolution. The unfused training step keeps
 every tiny-cuda-nn layer activation alive for the backward pass, which is what OOMs first on large
 images.
 
