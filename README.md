@@ -1,4 +1,53 @@
-# gsplat
+# gsplat-nht
+
+A fork of [nerfstudio-project/gsplat](https://github.com/nerfstudio-project/gsplat) that adds
+**NHT (Neural Harmonic Textures)** — a deferred neural shading path where each Gaussian carries
+tetrahedral vertex features that are harmonically encoded during rasterization and decoded to
+colour by a small MLP, instead of storing spherical-harmonic colour per Gaussian.
+
+Everything upstream gsplat does still works unchanged; NHT is opt-in through
+`rasterization(..., nht_params=NHTParams())`.
+
+### What this fork adds
+
+- **NHT deferred shading**, in two interchangeable execution paths (below).
+- **Windows / MSVC support.** Upstream `main` does not currently compile with MSVC; this fork
+  carries the fixes (`std::countl_zero` for `__builtin_clzll`, MSVC-safe `constexpr` capture in
+  the launch lambdas, explicit CUB instantiations, and `::isfinite` in device code).
+- **NHT trainer, viewer and benchmark scripts** — `examples/simple_trainer_nht.py`,
+  `examples/simple_viewer_nht.py`, and `examples/benchmarks/nht/`.
+- **Scene / experimental integration** — `GaussianNHTScene` and an NHT render path in
+  `gsplat.experimental`.
+
+### Non-fused vs fused kernels
+
+Both paths are numerically equivalent up to fp16 estimator noise; they differ in how the
+rasteriser and the decoder MLP are scheduled.
+
+| | **Non-fused** (default, most general) | **Fused** (fastest) |
+|---|---|---|
+| Execution | Rasterise harmonic features, then run the MLP as a separate tiny-cuda-nn pass | Rasterisation + SH view encoding + MLP + sigmoid in a single CUDA kernel (WMMA tensor cores) |
+| Use for | Training and inference, any configuration | Training and inference on the supported configs below |
+| Supports | Depth, normals, AOVs, backgrounds, masks, arbitrary decoder architectures | RGB only |
+| Encoding | Any tiny-cuda-nn encoding | Composite[Identity + SH degree-3], `rgb_only_sigmoid` output |
+| Decoder | Any hidden dim / layer count | `mlp_hidden_dim` ∈ {64, 128}, `mlp_num_layers` ∈ {2, 3} |
+| `feature_dim` | Unconstrained | {4, 8, 12, 16, 24, 32, 48, 64, 96} forward; {16, 32, 48} for the fused backward |
+
+The fused path avoids materialising the per-pixel feature buffer and the MLP activations, so it is
+both faster and markedly more memory-efficient at high resolution — the unfused training step keeps
+every tiny-cuda-nn layer activation alive for the backward pass, which is what OOMs first on large
+images.
+
+Call `gsplat.nht.nht_fused_supported(shader, for_training=...)` to test a configuration; it returns
+`(supported, reason)`. The trainer and viewers use it to fall back to the non-fused path
+automatically, so depth/normal/AOV modes keep working. Pass `--nht_fused` to
+`simple_trainer_nht.py` to train with the fused kernels.
+
+See [docs/nht.md](docs/nht.md) for the full description, and
+[the project page](https://research.nvidia.com/labs/sil/projects/neural-harmonic-textures/) for the
+method.
+
+---
 
 [![Core Tests.](https://github.com/nerfstudio-project/gsplat/actions/workflows/core_tests.yml/badge.svg?branch=main)](https://github.com/nerfstudio-project/gsplat/actions/workflows/core_tests.yml)
 [![Docs](https://github.com/nerfstudio-project/gsplat/actions/workflows/doc.yml/badge.svg?branch=main)](https://github.com/nerfstudio-project/gsplat/actions/workflows/doc.yml)
