@@ -615,7 +615,10 @@ static void nht_ffwd_wrapper_##C##_##H##_##L( \
 }
 
 // Channel set {4,8,12,16,24,32,48,64,96} × each (hidden, layers) config,
-// covering both training and inference-only callers.
+// covering both training and inference-only callers. Trimmed to this fork's
+// actual NHT feature-dim range (see kNHTSupportedChannels in
+// RasterizationNHT.cpp and NHT_SUPPORTED_CHANNELS in gsplat/nht/_wrapper.py,
+// which must match).
 #define __NHT_DEF_WRAPPER_ALL_C__(H, L) \
     __NHT_DEF_WRAPPER__(4,  H, L) __NHT_DEF_WRAPPER__(8,  H, L) __NHT_DEF_WRAPPER__(12, H, L) \
     __NHT_DEF_WRAPPER__(16, H, L) __NHT_DEF_WRAPPER__(24, H, L) __NHT_DEF_WRAPPER__(32, H, L) \

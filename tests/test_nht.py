@@ -629,9 +629,21 @@ class TestEncodingHelpers:
     def test_common_feature_dims_supported(self):
         # ``_find_next_supported`` is re-imported here for clarity; the
         # top-of-file import is the source of truth.
+        #
+        # This checks `dim * encf` (encf=2) is reachable by padding, which
+        # caps out at dim<=48 now that the compiled channel matrix's max is
+        # 96 (SUPPORTED_CHANNELS' max) — this fork's NHT configs don't need
+        # anything past feature_dim=96. Larger dims (64, 128, ...) are still
+        # directly supported as an exact `feature_dim` elsewhere (e.g. the
+        # rasterize `feature_dim` parametrize tests) since that path doesn't
+        # go through this encf multiplication; only this specific "pad an
+        # arbitrary output width" check is capped. A larger *directly
+        # supported* feature_dim needs a rebuild with that value added to
+        # SUPPORTED_CHANNELS (and the matching CUDA-side
+        # kNHTSupportedChannels / __INS__ / __NHT_SWITCH__ lists).
 
         encf = get_encoding_expansion_factor()
-        for dim in [16, 32, 48, 64, 128]:
+        for dim in [16, 32, 48]:
             eff = dim * encf
             if eff in SUPPORTED_CHANNELS:
                 continue

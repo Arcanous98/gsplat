@@ -66,7 +66,31 @@ DEBUG = os.getenv("DEBUG", "0") == "1"
 FAST_MATH = os.getenv("FAST_MATH", "1") == "1"
 WITH_SYMBOLS = os.getenv("WITH_SYMBOLS", "1" if DEBUG else "0") == "1"
 NVCC_FLAGS = os.getenv("NVCC_FLAGS", "")
+# nvcc --split-compile N (CUDA 12.x+) parallelizes the optimization/codegen
+# phase WITHIN one translation unit across N threads — NOT --threads, which
+# only helps when targeting multiple GPU architectures and is a no-op for a
+# single -arch build like ours (TORCH_CUDA_ARCH_LIST=8.9+PTX counts as one).
+# --split-compile is the actual fix for gsplat's real bottleneck: ~15 giant
+# rasterizer files that each instantiate the full CDIM x tile_size x
+# bool-axes cross product from GSPLAT_NUM_CHANNELS (~200-400+ kernel
+# variants per file). Ninja's own cross-FILE parallelism (default
+# MAX_JOBS=cpu_count) does nothing for a single slow file — the wall-clock
+# of a clean/invalidated build is bounded by the slowest single file,
+# historically 30-60 min each. NVIDIA documents this flag as having
+# "minimal (if any) impact on performance of the compiled binary" — it's a
+# compile-time-only parallelization, not a codegen-quality tradeoff. Set to
+# "0" to disable and fall back to nvcc's single-threaded-per-file default.
+NVCC_SPLIT_COMPILE = os.getenv("GSPLAT_NVCC_SPLIT_COMPILE", "8")
 MAX_JOBS = os.getenv("MAX_JOBS")
+if MAX_JOBS is None and NVCC_SPLIT_COMPILE not in ("", "0"):
+    # Bound TOTAL concurrent compiler threads (ninja file-parallelism x
+    # nvcc's split-compile threads per file) to roughly the core count, so
+    # this doesn't oversubscribe CPU/RAM: e.g. 32 cores / 8 threads-per-file
+    # -> 4 concurrently-compiling files x 8 threads = 32, not 32 x 8 = 256.
+    # Only applied when the user hasn't already set MAX_JOBS themselves.
+    _cpu_count = os.cpu_count() or 4
+    MAX_JOBS = str(max(2, _cpu_count // max(1, int(NVCC_SPLIT_COMPILE))))
+    os.environ["MAX_JOBS"] = MAX_JOBS
 NINJA_STATUS = os.getenv("NINJA_STATUS")
 VERBOSE = os.getenv("VERBOSE", "0") == "1"
 
@@ -158,6 +182,8 @@ def get_build_parameters():
         extra_ldflags += ["-arch", "arm64"]
 
     extra_cuda_cflags += ["--forward-unknown-opts"]
+    if NVCC_SPLIT_COMPILE not in ("", "0"):
+        extra_cuda_cflags += ["--split-compile", NVCC_SPLIT_COMPILE]
 
     # Debug/Release mode
     # MSVC (cl) does not support -O3/-O0; use -O2/-Od (torch converts - to /)

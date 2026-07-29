@@ -718,7 +718,8 @@ void launch_rasterize_to_pixels_from_world_nht_3dgs_fwd_kernel(
             last_ids.data_ptr<int32_t>());
 }
 
-// Explicit instantiation — match the full channel list from the reference.
+// Explicit instantiation — must match kNHTSupportedChannels in
+// RasterizationNHT.cpp and NHT_SUPPORTED_CHANNELS in gsplat/nht/_wrapper.py.
 #define __INS__(CDIM, SCALAR_T)                                                \
     template void launch_rasterize_to_pixels_from_world_nht_3dgs_fwd_kernel<CDIM, SCALAR_T>( \
         const at::Tensor, const at::Tensor, const at::Tensor,                 \
@@ -739,11 +740,8 @@ void launch_rasterize_to_pixels_from_world_nht_3dgs_fwd_kernel(
         at::Tensor);                                                           \
 
 __INS__(4, at::Half) __INS__(8, at::Half) __INS__(12, at::Half)
-__INS__(16, at::Half) __INS__(20, at::Half) __INS__(24, at::Half)
-__INS__(28, at::Half) __INS__(32, at::Half) __INS__(36, at::Half)
-__INS__(40, at::Half) __INS__(44, at::Half) __INS__(48, at::Half)
-__INS__(64, at::Half) __INS__(80, at::Half) __INS__(96, at::Half)
-__INS__(128, at::Half) __INS__(256, at::Half)
+__INS__(16, at::Half) __INS__(24, at::Half) __INS__(32, at::Half)
+__INS__(48, at::Half) __INS__(64, at::Half) __INS__(96, at::Half)
 #undef __INS__
 
 } // namespace gsplat

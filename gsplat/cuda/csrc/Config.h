@@ -74,9 +74,13 @@
 #endif
 
 #ifndef GSPLAT_NUM_CHANNELS
-// NHT requires additional channel counts (12, 48, 80, 96) for its harmonic feature dimensions.
-// These are only instantiated when GSPLAT_BUILD_NHT=1; the full list is always defined here
-// because the preprocessor must see a consistent set of channel instantiations at build time.
-#    define GSPLAT_NUM_CHANNELS \
-        1, 2, 3, 4, 5, 6, 8, 9, 12, 16, 17, 21, 23, 24, 32, 33, 48, 64, 65, 80, 96, 128, 129, 256, 257, 512, 513
+// This fork's focus is NHT, which has its own dedicated CDIM dispatch (see
+// kNHTSupportedChannels in RasterizationNHT.cpp and NHT_SUPPORTED_CHANNELS in
+// gsplat/nht/_wrapper.py) and does NOT read this macro at all. This list only
+// gates the classic 3DGS/2DGS/Sparse rasterizers' channel-count template
+// matrix, trimmed to what this repo's own training/eval scripts actually use
+// (depth-only, RGB, RGBD) to keep clean-build time in the few-minutes range.
+// If you need another channel count on those paths (e.g. an arbitrary N-D
+// feature buffer), add it here and rebuild.
+#    define GSPLAT_NUM_CHANNELS 1, 3, 4
 #endif

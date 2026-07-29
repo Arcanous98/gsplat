@@ -74,19 +74,11 @@ NHT_SUPPORTED_CHANNELS: Tuple[int, ...] = (
     8,
     12,
     16,
-    20,
     24,
-    28,
     32,
-    36,
-    40,
-    44,
     48,
     64,
-    80,
     96,
-    128,
-    256,
 )
 
 
@@ -776,6 +768,16 @@ def rasterize_to_pixels_from_world_nht_3dgs_fused_fwd(
     With ``save_state=True`` the kernel additionally emits the per-pixel
     accumulated feature buffer and last_ids required by the fused backward.
 
+    Unlike the non-fused world-eval3d path (``_nht_pad_colors``), this
+    function does NOT auto-pad ``colors`` to the next supported channel
+    count: ``mlp_params`` is a trained weight tensor whose shape is fixed to
+    one exact encoded dimension (``enc_dim = round_up16(feature_dim + 9)``),
+    so silently padding the feature width here would feed the MLP an input
+    it was never trained for. ``feature_dim`` must already be one of
+    ``NHT_SUPPORTED_CHANNELS`` when training/exporting a model for fused
+    inference; this just gives a clear Python-side error instead of the
+    CUDA kernel's ``AT_ERROR`` when it isn't.
+
     Returns
     -------
     render_rgb   : [B, C, H, W, 3]         float16
@@ -783,6 +785,17 @@ def rasterize_to_pixels_from_world_nht_3dgs_fused_fwd(
     render_feat  : [B, C, H, W, FEAT_OUT]  float32 (empty if not save_state)
     last_ids     : [B, C, H, W]            int32   (empty if not save_state)
     """
+    channels = colors.shape[-1]
+    if channels not in NHT_SUPPORTED_CHANNELS:
+        raise ValueError(
+            f"NHT fused inference: feature_dim={channels} is not one of the "
+            f"compiled channel counts {NHT_SUPPORTED_CHANNELS}. Retrain/export "
+            "with a supported feature_dim, or rebuild gsplat with this value "
+            "added to the fused kernel's channel set (see "
+            "RasterizeToPixelsFromWorldNHTFusedFwd.cu / FusedBwd.cu, "
+            "kNHTSupportedChannels in RasterizationNHT.cpp, and "
+            "NHT_SUPPORTED_CHANNELS here)."
+        )
     return _rasterize_to_pixels_from_world_nht_3dgs_fused_fwd(
         means.contiguous(),
         quats.contiguous(),
@@ -866,6 +879,14 @@ def rasterize_to_pixels_from_world_nht_3dgs_fused_bwd(
     -------
     (v_means, v_quats, v_scales, v_colors fp32, v_opacities, v_mlp_params)
     """
+    channels = colors.shape[-1]
+    if channels not in NHT_SUPPORTED_CHANNELS:
+        raise ValueError(
+            f"NHT fused bwd: feature_dim={channels} is not one of the "
+            f"compiled channel counts {NHT_SUPPORTED_CHANNELS}. This should "
+            "be unreachable if the matching fused fwd call already validated "
+            "the same `colors` tensor."
+        )
     return _rasterize_to_pixels_from_world_nht_3dgs_fused_bwd(
         means.contiguous(),
         quats.contiguous(),

@@ -173,19 +173,11 @@ rasterize_to_pixels_from_world_nht_3dgs_fwd(
         case 8:   __NHT_FWD_LAUNCH__(8,   at::Half); break;
         case 12:  __NHT_FWD_LAUNCH__(12,  at::Half); break;
         case 16:  __NHT_FWD_LAUNCH__(16,  at::Half); break;
-        case 20:  __NHT_FWD_LAUNCH__(20,  at::Half); break;
         case 24:  __NHT_FWD_LAUNCH__(24,  at::Half); break;
-        case 28:  __NHT_FWD_LAUNCH__(28,  at::Half); break;
         case 32:  __NHT_FWD_LAUNCH__(32,  at::Half); break;
-        case 36:  __NHT_FWD_LAUNCH__(36,  at::Half); break;
-        case 40:  __NHT_FWD_LAUNCH__(40,  at::Half); break;
-        case 44:  __NHT_FWD_LAUNCH__(44,  at::Half); break;
         case 48:  __NHT_FWD_LAUNCH__(48,  at::Half); break;
         case 64:  __NHT_FWD_LAUNCH__(64,  at::Half); break;
-        case 80:  __NHT_FWD_LAUNCH__(80,  at::Half); break;
         case 96:  __NHT_FWD_LAUNCH__(96,  at::Half); break;
-        case 128: __NHT_FWD_LAUNCH__(128, at::Half); break;
-        case 256: __NHT_FWD_LAUNCH__(256, at::Half); break;
         default: AT_ERROR("NHT fwd: unsupported channels: ", channels);
     }
 #undef __NHT_FWD_LAUNCH__
@@ -303,19 +295,11 @@ rasterize_to_pixels_from_world_nht_3dgs_bwd(
         case 8:   __NHT_BWD_LAUNCH__(8);   break;
         case 12:  __NHT_BWD_LAUNCH__(12);  break;
         case 16:  __NHT_BWD_LAUNCH__(16);  break;
-        case 20:  __NHT_BWD_LAUNCH__(20);  break;
         case 24:  __NHT_BWD_LAUNCH__(24);  break;
-        case 28:  __NHT_BWD_LAUNCH__(28);  break;
         case 32:  __NHT_BWD_LAUNCH__(32);  break;
-        case 36:  __NHT_BWD_LAUNCH__(36);  break;
-        case 40:  __NHT_BWD_LAUNCH__(40);  break;
-        case 44:  __NHT_BWD_LAUNCH__(44);  break;
         case 48:  __NHT_BWD_LAUNCH__(48);  break;
         case 64:  __NHT_BWD_LAUNCH__(64);  break;
-        case 80:  __NHT_BWD_LAUNCH__(80);  break;
         case 96:  __NHT_BWD_LAUNCH__(96);  break;
-        case 128: __NHT_BWD_LAUNCH__(128); break;
-        case 256: __NHT_BWD_LAUNCH__(256); break;
         default: AT_ERROR("NHT bwd: unsupported channels: ", channels);
     }
 #undef __NHT_BWD_LAUNCH__
@@ -522,7 +506,7 @@ namespace
     // Channel counts the NHT kernel switch is instantiated for. Feature inputs
     // are padded up to the next entry; the padded output columns are trimmed
     // back off after the render.
-    constexpr int64_t kNHTSupportedChannels[] = {4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 64, 80, 96, 128, 256};
+    constexpr int64_t kNHTSupportedChannels[] = {4, 8, 12, 16, 24, 32, 48, 64, 96};
 
     int64_t next_supported_nht_channels(int64_t channels)
     {

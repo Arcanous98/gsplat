@@ -806,7 +806,9 @@ static void nht_fbwd_wrapper_##C##_##H##_##L( \
             n_dw_slots); \
 }
 
-// Channel set {4,8,12,16,24,32,48,64,96} × each (hidden, layers) config.
+// Channel set {4,8,12,16,24,32,48,64,96} × each (hidden, layers) config. Must
+// match the fwd file's __NHT_DEF_WRAPPER_ALL_C__ and kNHTSupportedChannels in
+// RasterizationNHT.cpp / NHT_SUPPORTED_CHANNELS in gsplat/nht/_wrapper.py.
 #define __NHT_DEF_BWD_WRAPPER_ALL_C__(H, L) \
     __NHT_DEF_BWD_WRAPPER__(4,  H, L) __NHT_DEF_BWD_WRAPPER__(8,  H, L) __NHT_DEF_BWD_WRAPPER__(12, H, L) \
     __NHT_DEF_BWD_WRAPPER__(16, H, L) __NHT_DEF_BWD_WRAPPER__(24, H, L) __NHT_DEF_BWD_WRAPPER__(32, H, L) \
