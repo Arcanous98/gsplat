@@ -595,7 +595,7 @@ __global__ void rasterize_to_pixels_from_world_nht_3dgs_bwd_kernel(
                     // populated from ray hit distance). Adds into v_grd_n /
                     // v_gro / v_scale_local before the geometry chain rule.
                     if (bwd_d && use_hit_distance && hit_dist_len > 1e-8f) {
-                        const vec3 v_grds = (grds_for_hit / hit_dist_len) * v_render_d;
+                        const vec3 v_grds = (grds_for_hit / hit_dist_len) * (fac * v_render_d);
                         const float v_hit_t = glm::dot(scale * grd_n, v_grds);
                         // grds = scale * grd_n * hit_t  (element-wise)
                         const vec3 v_grd_n_hit = (scale * hit_t_for_hit) * v_grds - gro * v_hit_t;
